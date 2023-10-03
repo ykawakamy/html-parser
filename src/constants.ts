@@ -1,0 +1,2 @@
+export const kMarkupPattern = /<!--[\s\S]*?-->|<(\/?)([a-zA-Z][-.:0-9_a-zA-Z]*)((?:\s+[^>]*?(?:(?:'[^']*')|(?:"[^"]*"))?)*?)(\s*)(\/?)>/g;
+export const kAttributePattern = /(?:^|\s+)([^=\s]+)(?:\s*=\s*((?:'[^']*')|(?:"[^"]*")|\S+))?/gi;
