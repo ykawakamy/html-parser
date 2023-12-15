@@ -188,76 +188,47 @@ describe("PHtmlNode", () => {
   });
   test("test", ()=>{
     const html = `
-    <div class="hdrSearch  hidden" id="searchBlingBox" >
-	<div id="searchInputEle" class="hdrSearchC" >
-		<div >
-			<form onsubmit="return false;">
-				<input type="text" value="News, Quotes, Companies, Videos" class="hdrSearchInput unUsed" id="globalHeaderSearchInput" autocomplete="off" size="28">
-				<button class="hdrSearchBtn" type="button">SEARCH</button>
-			</form>
-		</div>
-	</div>
-	<div id="globalHeaderAutoComplete" class="hdrSearchList hidden">
-		<div class="autocompleteContent" >
-		</div>		
-	</div>
-		<!--  Autocomplete viewTemplate content - could be used on pages where autocomplete is not in header -->
-<!-- Do not change id of textArea its referred in dj.widget.autocomplete.autoCompleteViewTemplate.js-->	
-<textarea id="wsj_autocomplete_template" style="display:none">	
- 
-	<div>
-			<div class="acHeadline hidden"  >
-			</div>
-			<div class="dropdownContainerClass">
-				<div class="suggestionblock hidden" templateType="C1">	
-					<ul role="listbox" class="">
-						<li role="menuitem" class="hdrSearchListName">
-							headline
-						</li>
-						<li role="menuitem" class="lineItem">
-							<a class="searchResult" href="javascript:void(0);">
-							   <span class="searchTerm">gold</span>man
-							</a>
-						</li>						
-					</ul>
-				</div>
-				<div class="suggestionblock hidden" templateType="C3">	
-					<ul role="listbox" class="hdrSearchListComp">
-						<li role="menuitem" class="hdrSearchListName">
-							Companies
-						</li>
-						<li role="menuitem" class="lineItem">
-							<a class="searchResult" href="javascript:void(0);">
-								<div class="searchListCompTicker">
-									<span class="searchTerm">GOLD</span>
-								</div>
-								<div class="searchListCompName">
-									Ran
-									<span class="searchTerm">gold</span> Resources Ltd. ADS
-								</div>
-								<div class="searchListCompMarkets">
-									U.S.
-								</div>
-							</a>
-						</li>						
-					</ul>									
-				</div>
-			</div>
-			<div class="acFooter hidden">
-				<ul role="listbox" class="hdrSearchListSearch">
-					<li role="menuitem" class="">
-						<a class="footer" href="#">View All Search Results &raquo;</a>
-					</li>
-				</ul>
-			</div>
-			<div id="SearchSponsorBox" class="sponsorBox"></div>
-		</div>
-</textarea>
+		<ul>
+		<li>
+			<ul>
+			<li>file1</li>
+			<li>file2</li>
+			</ul>
+		</li>
+		<li>file3</li>
+		</ul>
+		<ul>
+		<li>file4</li>
+		<li>file5</li>
+		</ul>
+		`
+		const queryExpr = "ul:has(li)";
+		const replaceExpr = `
+		`;
+		const expected = `
+		<ul>
+		
+		<li>file3</li>
+		</ul><li>
+			<ul>
+			<li>file1</li>
+			<li>file2</li>
+			</ul>
+		</li>
+		<ul>
+		
+		<li>file5</li>
+		</ul><li>file4</li>
+		`;
+    const root = new pHtmlParser().parse(html);
+    const uls = root.querySelectorAll(queryExpr);
+    for( const $ of uls){
+      var s = $.querySelector("li")!;
+      $.removeChild(s);
+      $.insertAdjacentHTML("afterend", s.outerHTML);
+    }
 
-</div>`
-    const root = new pHtmlParser({skipComment:false}).parse(html);
-    const li = root.querySelector("li");
-    console.log(li!.range);
+    expect(root.outerHTML).toBe(expected);
 
   });
   

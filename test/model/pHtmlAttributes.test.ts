@@ -1,6 +1,4 @@
-// import { PHtmlAttributes } from "model";
-
-import { PHtmlAttributes } from "../../src/model/PHtmlAttributes";
+import { PHtmlAttributes } from "model/PHtmlAttributes";
 
 describe("PHtmlAttributes", () => {
   describe("add", () => {

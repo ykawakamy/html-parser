@@ -2,7 +2,9 @@ import {
   IPHtmlAttributes,
   IPHtmlClassList,
   IPHtmlElement,
-  IPHtmlNode
+  IPHtmlNode,
+  IPHtmlRange,
+  InsertPosition
 } from "../interface";
 import * as CSSselect from "css-select";
 import { pHtmlParser } from "../pHtmlParser";
@@ -10,6 +12,7 @@ import { adaptor } from "../PHtmlCssSelectAdaptor";
 import { PHtmlNode } from "./PHtmlNode";
 import { PHtmlAttributes } from "./PHtmlAttributes";
 import { PHtmlClassList } from "./PHtmlClassList";
+import * as he from 'he';
 // import { PHtmlNode, PHtmlAttributes, PHtmlClassList} from "../model";
 
 export class PHtmlElement extends PHtmlNode implements IPHtmlElement {
@@ -19,13 +22,14 @@ export class PHtmlElement extends PHtmlNode implements IPHtmlElement {
 
   constructor(
     private _tagName: string,
-    _parent: PHtmlNode | undefined,
+    _parent: IPHtmlNode | undefined,
     _attributes: IPHtmlAttributes | undefined,
     private _selfClosing: boolean,
     private _trailSpace: string,
-    _parser: pHtmlParser
+    _parser: pHtmlParser,
+    _range: IPHtmlRange = undefined,
   ) {
-    super(undefined, _parent, _parser, "element");
+    super(undefined, _parent, _parser, _range, "element");
     this._attributes = _attributes ?? new PHtmlAttributes();
     this._classList = new PHtmlClassList(this);
   }
@@ -57,16 +61,78 @@ export class PHtmlElement extends PHtmlNode implements IPHtmlElement {
   hasAttribute(name: string): boolean {
     return this._attributes.has(name);
   }
+  insertAdjacentHTML(position: InsertPosition, text: string): void {
+    const node = this._parser.parse(text);
+    if(!this.parentNode){
+      throw new Error();
+    }
+    switch(position){
+      case 'beforebegin':{
+        const idx = this.parentNode.childNodes.findIndex((v)=>v===this);
+        node.childNodes.forEach(v=>v.setParent(this.parentNode))
+        this.parentNode.childNodes.splice(idx, 0, ...node.childNodes);
+        break;
+      }
+      case "afterbegin":{
+        node.childNodes.forEach(v=>v.setParent(this))
+        this.childNodes.unshift(...node.childNodes);
+        break;
+      }
+      case "beforeend":{
+        node.childNodes.forEach(v=>v.setParent(this))
+        this.childNodes.push(...node.childNodes);
+        break;
+      }
+      case "afterend":{
+        const idx = this.parentNode.childNodes.findIndex((v)=>v===this);
+        node.childNodes.forEach(v=>v.setParent(this.parentNode))
+        this.parentNode.childNodes.splice(idx+1, 0, ...node.childNodes);
+        break;
+
+      }
+    }
+  }
+  insertAdjacentText(position: InsertPosition, text: string): void {
+    if(!this.parentNode){
+      throw new Error();
+    }
+    let heText = he.encode(text, {useNamedReferences:true});
+    switch(position){
+      case 'beforebegin':{
+        const node = new PHtmlNode(heText, this.parentNode, this._parser);
+        const idx = this.parentNode.childNodes.findIndex((v)=>v===this);
+        this.parentNode.childNodes.splice(idx, 0, node);
+        break;
+      }
+      case "afterbegin":{
+        const node = new PHtmlNode(heText, this.parentNode, this._parser);
+        this.childNodes.unshift(node);
+        break;
+      }
+      case "beforeend":{
+        const node = new PHtmlNode(heText, this.parentNode, this._parser);
+        this.childNodes.push(node);
+        break;
+      }
+      case "afterend":{
+        const node = new PHtmlNode(heText, this.parentNode, this._parser);
+        const idx = this.parentNode.childNodes.findIndex((v)=>v===this);
+        this.parentNode.childNodes.splice(idx+1, 0, node);
+        break;
+
+      }
+    }
+  }
   querySelector(query: string): IPHtmlElement | null {
     const result = CSSselect.selectOne(query, this, {
-      xmlMode: true,
+      xmlMode: false,
       adapter: adaptor,
     });
     return (result instanceof PHtmlElement && result) || null;
   }
   querySelectorAll(query: string): readonly IPHtmlElement[] {
     const result = CSSselect.selectAll(query, this, {
-      xmlMode: true,
+      xmlMode: false,
       adapter: adaptor,
     });
     return result as IPHtmlElement[];
@@ -96,9 +162,10 @@ export class PHtmlElement extends PHtmlNode implements IPHtmlElement {
       const tmp = [];
       for (const node of nodes) {
         if (typeof node === "string") {
-          tmp.push(new PHtmlNode(node, this, this._parser));
+          tmp.push(new PHtmlNode(node, this._parent, this._parser));
         } else {
           tmp.push(node);
+          node.setParent(this._parent);
         }
       }
       this._parent.childNodes.splice(index, 1, ...tmp);
@@ -140,35 +207,35 @@ export class PHtmlElement extends PHtmlNode implements IPHtmlElement {
     this.replaceWith(...root.childNodes);
   }
 
-  get range(){
-    const tagName = this.tagName;
-    if (tagName) {
-      const attrText = this._attributes.getAttributeText();
-      if (this._selfClosing && this.childNodes.length == 0) {
-        const endOpenTag = tagName.length + attrText.length + this._trailSpace.length + 3;
-        return {
-          startOpenTag: 0,
-          endOpenTag: endOpenTag,
-          startCloseTag: endOpenTag,
-          endCloseTag: endOpenTag,
-        }
-      }
-      const innerHTML = this.innerHTML;
-      const closeTag = this._rawCloseTag || `</${tagName}>`;
-      const endOpenTag = tagName.length + attrText.length + this._trailSpace.length + 2;
-      return {
-        startOpenTag: 0,
-        endOpenTag: endOpenTag,
-        startCloseTag: endOpenTag + innerHTML.length,
-        endCloseTag: endOpenTag + innerHTML.length + closeTag.length,
-      }
-  } else {
-      return {
-        startOpenTag: 0,
-        endOpenTag: 0,
-        startCloseTag: this.innerHTML.length,
-        endCloseTag: this.innerHTML.length,
-      }
-    }
-  }
+  // get range(){
+  //   const tagName = this.tagName;
+  //   if (tagName) {
+  //     const attrText = this._attributes.getAttributeText();
+  //     if (this._selfClosing && this.childNodes.length == 0) {
+  //       const endOpenTag = tagName.length + attrText.length + this._trailSpace.length + 3;
+  //       return {
+  //         startOpenTag: 0,
+  //         endOpenTag: endOpenTag,
+  //         startCloseTag: endOpenTag,
+  //         endCloseTag: endOpenTag,
+  //       }
+  //     }
+  //     const innerHTML = this.innerHTML;
+  //     const closeTag = this._rawCloseTag || `</${tagName}>`;
+  //     const endOpenTag = tagName.length + attrText.length + this._trailSpace.length + 2;
+  //     return {
+  //       startOpenTag: 0,
+  //       endOpenTag: endOpenTag,
+  //       startCloseTag: endOpenTag + innerHTML.length,
+  //       endCloseTag: endOpenTag + innerHTML.length + closeTag.length,
+  //     }
+  // } else {
+  //     return {
+  //       startOpenTag: 0,
+  //       endOpenTag: 0,
+  //       startCloseTag: this.innerHTML.length,
+  //       endCloseTag: this.innerHTML.length,
+  //     }
+  //   }
+  // }
 }

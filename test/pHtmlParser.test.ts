@@ -16,7 +16,7 @@ function toObject(obj: any): any {
   return obj;
 }
 
-describe("", () => {
+describe("pHtmlParser", () => {
   test("parse", () => {
     const html = `<a><b></b><c/></a><d><e/><f/></d>`;
     const node = new pHtmlParser().parse(html);
@@ -108,7 +108,7 @@ describe("", () => {
     
     <c/>
     </a>`;
-    const node = new pHtmlParser().parse(html);
+    const node = new pHtmlParser({skipComment: true}).parse(html);
     // console.log(JSON.stringify(node, null, 2));
     expect(node.outerHTML).toBe(expected);
   });
@@ -119,22 +119,75 @@ describe("", () => {
     <!--comment-->
     <c/>
     </a>`;
-    const node = new pHtmlParser({skipComment: false}).parse(html);
+    const node = new pHtmlParser().parse(html);
     // console.log(JSON.stringify(node, null, 2));
     expect(node.outerHTML).toBe(html);
   });
 
-  test("incorrect closing1", () => {
+  test("incorrect closing - 1", () => {
     const html = `<a><b><a></d><e/><f/></d>`;
     const node = new pHtmlParser().parse(html);
     // console.log(JSON.stringify(node, null, 2));
     expect(node.outerHTML).toBe(html);
   });
 
-  test("incorrect closing2", () => {
+  test("unclosing tag - 1", () => {
     const html = `<a><input><input2></a>`;
     const node = new pHtmlParser().parse(html);
     // console.log(JSON.stringify(node, null, 2));
     expect(node.outerHTML).toBe(`<a><input><input2></a>`);
   });
+
+  test("unclosing tag - 2", ()=>{
+    const html = `			<form onsubmit="return false;">
+    <input type="text" value="News, Quotes, Companies, Videos" class="hdrSearchInput unUsed" id="globalHeaderSearchInput" autocomplete="off" size="28">
+    <button class="hdrSearchBtn" type="button">SEARCH</button>
+  </form>`;
+    const node = new pHtmlParser({skipComment: false}).parse(html, );
+    // console.log(JSON.stringify(node, null, 2));
+    expect(node.toString()).toBe(html);
+    expect(node.range).toStrictEqual({
+      startOpenTag: 0,
+      endOpenTag: 0,
+      startCloseTag: html.length,
+      endCloseTag: html.length,
+    })
+    expect(node.childNodes[1].range).toStrictEqual({
+      startOpenTag: 3,
+      endOpenTag: 34,
+      startCloseTag: 252,
+      endCloseTag: 259,
+    })  
+
+  })
+
+  test("skip code in script tag", ()=>{
+    const html = `			<form onsubmit="return false;">
+    <input type="text" value="News, Quotes, Companies, Videos" class="hdrSearchInput unUsed" id="globalHeaderSearchInput" autocomplete="off" size="28">
+    <script>
+    encodeURI('<iframe width="562" height="316" src="http://'+"www.pcworld.com"+'/video/iframe/26362/iframe.html" frameborder="0" allowfullscreen></iframe>')
+    </script>
+    <button class="hdrSearchBtn" type="button">SEARCH</button>
+  </form>`;
+    const node = new pHtmlParser({skipComment: false}).parse(html, );
+    // console.log(JSON.stringify(node, null, 2));
+    expect(node.toString()).toBe(html);
+    expect(node.querySelector("iframe")).toBe(null);
+  })
+
+  test("incorrect script tag", ()=>{
+    const html = `			<form onsubmit="return false;">
+    <input type="text" value="News, Quotes, Companies, Videos" class="hdrSearchInput unUsed" id="globalHeaderSearchInput" autocomplete="off" size="28">
+    <script>
+    encodeURI('<iframe width="562" height="316" src="http://'+"www.pcworld.com"+'/video/iframe/26362/iframe.html" frameborder="0" allowfullscreen></iframe>')
+    <button class="hdrSearchBtn" type="button">SEARCH</button>
+  </form>`;
+    const node = new pHtmlParser({skipComment: false}).parse(html, );
+    // console.log(JSON.stringify(node, null, 2));
+    expect(node.toString()).toBe(html);
+    expect(node.querySelector("iframe")).not.toBe(null);
+    expect(node.querySelector("script")?.childNodes.length).toBe(0);
+
+  })
+
 });

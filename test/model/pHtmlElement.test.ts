@@ -125,6 +125,88 @@ describe("PHtmlElement", () => {
     });
   });
 
+  describe("insertAdjacentHTML", () => {
+    test("beforebegin", () => {
+      const html =  "<ul><li>file1</li><x/><li>file2</li></ul>"
+      const expected =  "<x/><ul><li>file1</li><li>file2</li></ul>";
+      const node = new pHtmlParser().parse(html);
+      const $ = node.children[0];
+      var s = $.querySelector("x")!;
+      $.removeChild(s);
+      $.insertAdjacentHTML("beforebegin", s.outerHTML);
+      expect(node.outerHTML).toBe(expected);
+    });
+    test("afterbegin", () => {
+      const html =  "<ul><li>file1</li><x/><li>file2</li></ul>"
+      const expected =  "<ul><x/><li>file1</li><li>file2</li></ul>";
+      const node = new pHtmlParser().parse(html);
+      const $ = node.children[0];
+      var s = $.querySelector("x")!;
+      $.removeChild(s);
+      $.insertAdjacentHTML("afterbegin", s.outerHTML);
+      expect(node.outerHTML).toBe(expected);
+    });
+    test("beforeend", () => {
+      const html =  "<ul><li>file1</li><x/><li>file2</li></ul>"
+      const expected =  "<ul><li>file1</li><li>file2</li><x/></ul>";
+      const node = new pHtmlParser().parse(html);
+      const $ = node.children[0];
+      var s = $.querySelector("x")!;
+      $.removeChild(s);
+      $.insertAdjacentHTML("beforeend", s.outerHTML);
+      expect(node.outerHTML).toBe(expected);
+    });
+    test("afterend", () => {
+      const html =  "<ul><li>file1</li><x/><li>file2</li></ul>"
+      const expected =  "<ul><li>file1</li><li>file2</li></ul><x/>";
+      const node = new pHtmlParser().parse(html);
+      const $ = node.children[0];
+      var s = $.querySelector("x")!;
+      $.removeChild(s);
+      $.insertAdjacentHTML("afterend", s.outerHTML);
+      expect(node.outerHTML).toBe(expected);
+    });
+  });
+
+  describe("insertAdjacentText", () => {
+    test("beforebegin", () => {
+      const html =  "<ul><li>file1</li><li>file2</li></ul>"
+      const expected =  "&lt;x/&gt;<ul><li>file1</li><li>file2</li></ul>";
+      const node = new pHtmlParser().parse(html);
+      const $ = node.children[0];
+      const s = `<x/>`;
+      $.insertAdjacentText("beforebegin", s);
+      expect(node.outerHTML).toBe(expected);
+    });
+    test("afterbegin", () => {
+      const html =  "<ul><li>file1</li><li>file2</li></ul>"
+      const expected =  "<ul>&lt;x/&gt;<li>file1</li><li>file2</li></ul>";
+      const node = new pHtmlParser().parse(html);
+      const $ = node.children[0];
+      const s = `<x/>`;
+      $.insertAdjacentText("afterbegin", s);
+      expect(node.outerHTML).toBe(expected);
+    });
+    test("beforeend", () => {
+      const html =  "<ul><li>file1</li><li>file2</li></ul>"
+      const expected =  "<ul><li>file1</li><li>file2</li>&lt;x/&gt;</ul>";
+      const node = new pHtmlParser().parse(html);
+      const $ = node.children[0];
+      const s = `<x/>`;
+      $.insertAdjacentText("beforeend", s);
+      expect(node.outerHTML).toBe(expected);
+    });
+    test("afterend", () => {
+      const html =  "<ul><li>file1</li><li>file2</li></ul>"
+      const expected =  "<ul><li>file1</li><li>file2</li></ul>&lt;x/&gt;";
+      const node = new pHtmlParser().parse(html);
+      const $ = node.children[0];
+      const s = `<x/>`;
+      $.insertAdjacentText("afterend", s);
+      expect(node.outerHTML).toBe(expected);
+    });
+  });
+
   describe("querySelector/All", () => {
     test('query specific tag', function () {
       const document = new pHtmlParser().parse(`<div><a attr1="1"  attr2='2' attr3=3 attr4>1</a><a>2</a><a attr1="5"/><b/></div>`);
@@ -229,6 +311,8 @@ describe("PHtmlElement", () => {
       expect(aNode.childNodes.length).toBe(2);
       expect(aNode.childNodes[0]).toBe(first);
       expect(aNode.childNodes[1]).toBe(second);
+      expect(first.parentNode).toBe(aNode);
+      expect(second.parentNode).toBe(aNode);
     });
 
     test("replace string", () => {
@@ -239,19 +323,24 @@ describe("PHtmlElement", () => {
       expect(aNode.childNodes.length).toBe(2);
       expect(aNode.childNodes[0].outerHTML).toBe("text1");
       expect(aNode.childNodes[1].outerHTML).toBe("text2");
+      expect(aNode.childNodes[0].parentNode).toBe(aNode);
+      expect(aNode.childNodes[1].parentNode).toBe(aNode);
     });
 
   });
 
   describe("replaceWith", () => {
-    test("clear", () => {
+    test("detach", () => {
       const node = new pHtmlParser().parse(`<a><b/><c/></a>`);
       const aNode = node.childNodes[0];
       const target = node.querySelector("b");
       target!.replaceWith();
       expect(aNode.childNodes.length).toBe(1);
+      expect(aNode.childNodes[0].parentNode).toBe(aNode);
       expect(aNode.outerHTML).toBe("<a><c/></a>");
     });
+
+    test 
     test("replace node", () => {
       const node = new pHtmlParser().parse(`<a><b/><c/></a>`);
       const aNode = node.childNodes[0];
@@ -264,6 +353,8 @@ describe("PHtmlElement", () => {
       expect(aNode.childNodes.length).toBe(3);
       expect(aNode.childNodes[0]).toBe(first);
       expect(aNode.childNodes[1]).toBe(second);
+      expect(aNode.childNodes[0].parentNode).toBe(aNode);
+      expect(aNode.childNodes[1].parentNode).toBe(aNode);
     });
 
     test("replace string", () => {
@@ -273,6 +364,8 @@ describe("PHtmlElement", () => {
       target!.replaceWith("first", "second");
       expect(aNode.outerHTML).toBe("<a>firstsecond<c/></a>");
       expect(aNode.childNodes.length).toBe(3);
+      expect(aNode.childNodes[0].parentNode).toBe(aNode);
+      expect(aNode.childNodes[1].parentNode).toBe(aNode);
     });
 
   });

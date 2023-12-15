@@ -3,18 +3,19 @@ import { PHtmlDocument } from "./model/PHtmlDocument";
 import { PHtmlAttributes } from "./model/PHtmlAttributes";
 import { PHtmlElement } from "./model/PHtmlElement";
 import { PHtmlNode } from "./model/PHtmlNode";
-import { kMarkupPattern, kAttributePattern } from "./constants";
-import { IPHtmlDocument, IPHtmlElement } from "./interface";
+import { kMarkupPattern, kAttributePattern, kInlineCodeTagPattern } from "./constants";
+import { IPHtmlDocument, IPHtmlElement, IPHtmlRange } from "./interface";
 import * as _ from "lodash";
 
 export class pHtmlParser {
-  skipComment: boolean = true;
+  skipComment: boolean = false;
+  inlineCodeTags: string[] = ['script', 'style'];
 
-  constructor(option: { skipComment: boolean} = { skipComment: true}){
+  constructor(option: { skipComment: boolean} = { skipComment: false}){
     this.skipComment = !!option.skipComment;
   }
   parse(data: string): IPHtmlDocument {
-    let root = new PHtmlDocument(this);
+    let root = new PHtmlDocument(this, this.createRange(0, data.length));
     return this._base_parse(root, data);
   }
 
@@ -37,7 +38,7 @@ export class pHtmlParser {
       if (lastTextPos > -1) {
         if (lastTextPos + matchLength < tagEndPos) {
           const text = data.substring(lastTextPos, tagStartPos);
-          parent.appendChild(new PHtmlNode(text, parent, this));
+          parent.appendChild(new PHtmlNode(text, parent, this, this.createRange(lastTextPos, tagStartPos)));
         }
       }
 
@@ -45,30 +46,47 @@ export class pHtmlParser {
 
       if (matchText[1] === '!') {
         if (!skipComment) {
-          parent.appendChild(new PHtmlNode(matchText, parent, this));
+          parent.appendChild(new PHtmlNode(matchText, parent, this, this.createRange(tagStartPos, tagEndPos)));
         }
         continue;
       }
 
       if (!leadingSlash) {
         const attrs = new PHtmlAttributes();
-        const matcher = new RegExp(kAttributePattern);
-        for (let attMatch; (attMatch = matcher.exec(attributes));) {
+        const attrMatcher = new RegExp(kAttributePattern);
+        for (let attMatch; (attMatch = attrMatcher.exec(attributes));) {
           const { 0: raw, 1: key, 2: val, 3: withTrail } = attMatch;
-          const isQuoted = val && ( val[0] === `'` || val[0] === `"`);
+          const isQuoted = val && ( (val[0] === `'` && val[val.length-1] === `'` ) || (val[0] === `"` && val[val.length-1] === `"` ));
           const attr = isQuoted ? val.slice(1, val.length - 1) : val;
           attrs.add(key, attr, raw);
         }
 
-        const child = new PHtmlElement(tagName, parent, attrs, !!selfClosing, trailSpace, this);
+        const child = new PHtmlElement(tagName, parent, attrs, !!selfClosing, trailSpace, this, this.createElementRange(tagStartPos, tagEndPos));
         parent.appendChild(child);
+
+        if( this.inlineCodeTags.includes(tagName.toLowerCase())){
+          const inline = kInlineCodeTagPattern(tagName);
+          inline.lastIndex = lastTextPos;
+          const inlineMatch = inline.exec(data);
+          if( !!inlineMatch){
+            const {1: closeTag } = inlineMatch;
+            child.appendChild(new PHtmlNode(data.substring(lastTextPos, inline.lastIndex - closeTag.length), parent, this, this.createRange(lastTextPos, inline.lastIndex - closeTag.length)));
+            child._rawCloseTag = closeTag;
+            child.range!.startCloseTag = inline.lastIndex - closeTag.length;
+            child.range!.endCloseTag = inline.lastIndex;
+            lastTextPos = inline.lastIndex;
+            matcher.lastIndex = lastTextPos;
+            continue;
+          }
+        } 
+        
         if (!selfClosing) {
           stack.push(child);
           parent = child;
         }
       }
       if (leadingSlash) {
-        const s = _.findLastIndex(stack, (v) => v.tagName == tagName);
+        const s = _.findLastIndex(stack, (v) => v.tagName.toLowerCase() == tagName.toLowerCase());
         if (s != -1) {
           // closeless tag 
           for( let i=stack.length-1 ; s<i; i-- ){
@@ -78,15 +96,16 @@ export class pHtmlParser {
           }
           if (s > 0) {
             stack[s]._rawCloseTag = matchText;
+            stack[s].range!.startCloseTag = tagStartPos;
+            stack[s].range!.endCloseTag = tagEndPos;
             parent = stack[s - 1];
           }
           stack = stack.slice(0, s);
 
         } else {
           // incorrect closing tag
-          const child = new PHtmlNode(matchText, parent, this);
+          const child = new PHtmlNode(matchText, parent, this, this.createRange(tagStartPos, tagEndPos));
           parent.appendChild(child);
-          // parent = child;
         }
       }
 
@@ -94,7 +113,7 @@ export class pHtmlParser {
 
     if( lastTextPos < data.length ){
       const text = data.substring(lastTextPos);
-      parent.appendChild(new PHtmlNode(text, parent, this));
+      parent.appendChild(new PHtmlNode(text, parent, this, this.createRange(lastTextPos, data.length)));
     }
 
     for( let i=stack.length-1 ; 0<i; i-- ){
@@ -105,4 +124,24 @@ export class pHtmlParser {
 
     return root;
   }
+  createElementRange(tagStartPos: number, tagEndPos: number): IPHtmlRange {
+    return {
+      startOpenTag: tagStartPos,
+      endOpenTag: tagEndPos,
+      startCloseTag: tagEndPos,
+      endCloseTag: tagEndPos
+   }
+    
+  }
+
+  createRange(lastTextPos: number, tagStartPos: number): IPHtmlRange {
+    return {
+       startOpenTag: lastTextPos,
+       endOpenTag: lastTextPos,
+       startCloseTag: tagStartPos,
+       endCloseTag: tagStartPos
+    }
+  }
+
 }
+

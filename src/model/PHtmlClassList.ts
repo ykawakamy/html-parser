@@ -45,7 +45,7 @@ export class PHtmlClassList extends Array<string> implements IPHtmlClassList {
     return false;
   }
   supports(token: string): boolean {
-    return true;
+    return false;
   }
   toggle(token: string, force?: boolean | undefined): boolean {
     const idx = _.findIndex(this, v=>v===token);
@@ -58,8 +58,8 @@ export class PHtmlClassList extends Array<string> implements IPHtmlClassList {
     }
     if( force === undefined || force === true ){
       this.add(token);
-      return false;
+      return true;
     }
-    return true;
+    return false;
   }
 }

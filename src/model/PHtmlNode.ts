@@ -1,7 +1,8 @@
 import {
   IPHtmlElement,
   IPHtmlNode,
-  IPHtmlNodeList
+  IPHtmlNodeList,
+  IPHtmlRange
 } from "../interface";
 import { pHtmlParser } from "../pHtmlParser";
 // XXX avoid runtime error. "Class extends value undefined is not a constructor or null". maybe circular reference.
@@ -14,6 +15,7 @@ export class PHtmlNode implements IPHtmlNode {
     private _rawText: string | undefined,
     protected _parent: IPHtmlNode | undefined | null,
     protected _parser: pHtmlParser,
+    public range: IPHtmlRange = undefined,
     public _type: string = "node",
   ) { }
   get outerHTML(): string {
@@ -62,7 +64,7 @@ export class PHtmlNode implements IPHtmlNode {
     this._childNodes.push(node);
   }
   cloneNode(): IPHtmlNode {
-    return this._parser.parse(this.outerHTML);
+    return this._parser.parse(this.outerHTML).firstChild!;
   }
   insertBefore(node: IPHtmlNode, refNode: IPHtmlNode | null): void {
     const index = this.childNodes.findIndex((v) => v === refNode);
@@ -105,12 +107,12 @@ export class PHtmlNode implements IPHtmlNode {
     return `${this._rawText}`;
   }
 
-  get range(){
-    return {
-      startOpenTag: 0,
-      endOpenTag: 0,
-      startCloseTag: this.outerHTML.length,
-      endCloseTag: 0,
-    }
-  }
+  // get range(){
+  //   return {
+  //     startOpenTag: 0,
+  //     endOpenTag: 0,
+  //     startCloseTag: this.outerHTML.length,
+  //     endCloseTag: 0,
+  //   }
+  // }
 }

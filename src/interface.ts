@@ -12,6 +12,8 @@ export type IPHtmlAttributes = {
 
 export type IPHtmlNodeList = Array<IPHtmlNode>;
 
+export type InsertPosition = "afterbegin" | "afterend" | "beforebegin" | "beforeend";
+
 export interface IPHtmlClassList extends ArrayLike<string> /* ,  IterableIterator<string> */{
   get length(): number ;
   get value(): string;
@@ -117,7 +119,9 @@ export interface IPHtmlElement extends IPHtmlElementExtends {
   /** @see {@link https://developer.mozilla.org/ja/docs/Web/API/Element#element.haspointercapture | Element.hasPointerCapture() }  */
   /** @see {@link https://developer.mozilla.org/ja/docs/Web/API/Element#element.insertadjacentelement | Element.insertAdjacentElement() }  */
   /** @see {@link https://developer.mozilla.org/ja/docs/Web/API/Element#element.insertadjacenthtml | Element.insertAdjacentHTML() }  */
+  insertAdjacentHTML(position: InsertPosition, text: string): void;
   /** @see {@link https://developer.mozilla.org/ja/docs/Web/API/Element#element.insertadjacenttext | Element.insertAdjacentText() }  */
+  insertAdjacentText(position: InsertPosition, text: string): void;
   /** @see {@link https://developer.mozilla.org/ja/docs/Web/API/Element#element.matches | Element.matches() }  */
   /** @see {@link https://developer.mozilla.org/ja/docs/Web/API/Element#element.prepend | Element.prepend() }  */
   /** @see {@link https://developer.mozilla.org/ja/docs/Web/API/Element#element.queryselector | Element.querySelector() }  */

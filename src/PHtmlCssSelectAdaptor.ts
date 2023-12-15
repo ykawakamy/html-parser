@@ -23,7 +23,7 @@ export class PHtmlCssSelectAdaptor implements Adapter<IPHtmlNode, IPHtmlNode> {
     return node.childNodes;
   }
   getName(elem: IPHtmlNode): string {
-    return (elem instanceof PHtmlElement && elem.tagName) || "";
+    return (elem instanceof PHtmlElement && elem.tagName?.toLowerCase()) || "";
   }
   getParent(node: IPHtmlNode): IPHtmlNode | null {
     return node.parentNode ?? null;
