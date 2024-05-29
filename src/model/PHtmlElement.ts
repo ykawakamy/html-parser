@@ -1,39 +1,38 @@
+import * as CSSselect from "css-select";
+import * as he from 'he';
+import * as _ from "lodash";
 import {
-  IPHtmlAttributes,
   IPHtmlClassList,
   IPHtmlElement,
   IPHtmlNode,
   IPHtmlRange,
+  IPHtmlRawAttributes,
   InsertPosition
 } from "../interface";
-import * as CSSselect from "css-select";
-import { pHtmlParser } from "../pHtmlParser";
-import { adaptor } from "../PHtmlCssSelectAdaptor";
-import { PHtmlNode } from "./PHtmlNode";
-import { PHtmlAttributes } from "./PHtmlAttributes";
+import { PHtmlParser } from "../pHtmlParser";
+import { PHtmlRawAttributes } from "./PHtmlAttributes";
 import { PHtmlClassList } from "./PHtmlClassList";
-import * as he from 'he';
-// import { PHtmlNode, PHtmlAttributes, PHtmlClassList} from "../model";
+import { PHtmlNode } from "./PHtmlNode";
 
 export class PHtmlElement extends PHtmlNode implements IPHtmlElement {
   _rawCloseTag: string | undefined;
-  _attributes: IPHtmlAttributes;
+  _attributes: IPHtmlRawAttributes;
   private _classList: IPHtmlClassList;
 
   constructor(
     private _tagName: string,
     _parent: IPHtmlNode | undefined,
-    _attributes: IPHtmlAttributes | undefined,
+    _attributes: IPHtmlRawAttributes | undefined,
     private _selfClosing: boolean,
     private _trailSpace: string,
-    _parser: pHtmlParser,
+    _parser: PHtmlParser,
     _range: IPHtmlRange = undefined,
   ) {
     super(undefined, _parent, _parser, _range, "element");
-    this._attributes = _attributes ?? new PHtmlAttributes();
+    this._attributes = _attributes ?? new PHtmlRawAttributes(_parser);
     this._classList = new PHtmlClassList(this);
   }
-  get rawAttributes(): IPHtmlAttributes {
+  get rawAttributes(): IPHtmlRawAttributes {
     return this._attributes;
   }
   get tagName(): string {
@@ -66,7 +65,7 @@ export class PHtmlElement extends PHtmlNode implements IPHtmlElement {
     if(!this.parentNode){
       throw new Error();
     }
-    switch(position){
+    switch(_.toLower(position)){
       case 'beforebegin':{
         const idx = this.parentNode.childNodes.findIndex((v)=>v===this);
         node.childNodes.forEach(v=>v.setParent(this.parentNode))
@@ -97,7 +96,7 @@ export class PHtmlElement extends PHtmlNode implements IPHtmlElement {
       throw new Error();
     }
     let heText = he.encode(text, {useNamedReferences:true});
-    switch(position){
+    switch(_.toLower(position)){
       case 'beforebegin':{
         const node = new PHtmlNode(heText, this.parentNode, this._parser);
         const idx = this.parentNode.childNodes.findIndex((v)=>v===this);
@@ -124,17 +123,11 @@ export class PHtmlElement extends PHtmlNode implements IPHtmlElement {
     }
   }
   querySelector(query: string): IPHtmlElement | null {
-    const result = CSSselect.selectOne(query, this, {
-      xmlMode: false,
-      adapter: adaptor,
-    });
+    const result = CSSselect.selectOne(query, this, this._parser.cssSelectOption);
     return (result instanceof PHtmlElement && result) || null;
   }
   querySelectorAll(query: string): readonly IPHtmlElement[] {
-    const result = CSSselect.selectAll(query, this, {
-      xmlMode: false,
-      adapter: adaptor,
-    });
+    const result = CSSselect.selectAll(query, this, this._parser.cssSelectOption);
     return result as IPHtmlElement[];
   }
 
@@ -174,13 +167,22 @@ export class PHtmlElement extends PHtmlNode implements IPHtmlElement {
   setAttribute(name: string, value: string): void {
     this._attributes.set(name, value);
     //
-    if (name === "class") {
+    if (this._parser.caseNormalize(name) === "class") {
       this._classList = new PHtmlClassList(this);
     }
   }
 
   toString(): string {
-    return this.outerHTML;
+    const tagName = this.tagName;
+    const attrText = this._attributes.length > 0 ? ` ...${this._attributes.length}` : "";
+    const childCount = this.childNodes.length;
+    if (this._selfClosing && childCount == 0) {
+      return `<${tagName}${attrText}/>`;
+    }
+    if ( childCount > 0 ){
+      return `<${this._tagName}${attrText}>...${childCount}`;
+    }
+    return `<${this._tagName}${attrText}>`;
   }
 
   get outerHTML(): string {

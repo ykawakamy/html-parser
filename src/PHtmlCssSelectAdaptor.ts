@@ -4,9 +4,12 @@ import {
   IPHtmlNode
 } from "./interface";
 import { Adapter, Predicate } from "css-select/lib/types";
+import { PHtmlParser } from "pHtmlParser";
 // import { PHtmlElement } from "./model";
 
-export class PHtmlCssSelectAdaptor implements Adapter<IPHtmlNode, IPHtmlNode> {
+export class PHtmlCssSelectAdaptor implements Adapter<IPHtmlNode, IPHtmlElement> {
+  constructor(private _parser: PHtmlParser){
+  }
   isTag(node: IPHtmlNode): node is IPHtmlElement {
     return node instanceof PHtmlElement && node.tagName !== "";
   }
@@ -23,7 +26,7 @@ export class PHtmlCssSelectAdaptor implements Adapter<IPHtmlNode, IPHtmlNode> {
     return node.childNodes;
   }
   getName(elem: IPHtmlNode): string {
-    return (elem instanceof PHtmlElement && elem.tagName?.toLowerCase()) || "";
+    return (elem instanceof PHtmlElement && this._parser.caseNormalize(elem.tagName)) || "";
   }
   getParent(node: IPHtmlNode): IPHtmlNode | null {
     return node.parentNode ?? null;
@@ -36,7 +39,9 @@ export class PHtmlCssSelectAdaptor implements Adapter<IPHtmlNode, IPHtmlNode> {
     return node.outerHTML ?? "";
   }
   hasAttrib(elem: IPHtmlNode, name: string): boolean {
-    return !!this.getAttributeValue(elem, name);
+    return (
+      (elem instanceof PHtmlElement && elem.rawAttributes?.has(name))
+    );
   }
   /* istanbul ignore next */
   removeSubsets(nodes: IPHtmlNode[]): IPHtmlNode[] {
@@ -71,8 +76,8 @@ export class PHtmlCssSelectAdaptor implements Adapter<IPHtmlNode, IPHtmlNode> {
 
     return nodes;
   }
-  findAll(test: Predicate<IPHtmlNode>, nodes: IPHtmlNode[]): IPHtmlNode[] {
-    let result: IPHtmlNode[] = [];
+  findAll(test: Predicate<IPHtmlElement>, nodes: IPHtmlNode[]): IPHtmlElement[] {
+    let result: IPHtmlElement[] = [];
 
     for (const node of nodes) {
       if (!this.isTag(node)) {
@@ -88,12 +93,12 @@ export class PHtmlCssSelectAdaptor implements Adapter<IPHtmlNode, IPHtmlNode> {
     }
     return result;
   }
-  findOne(test: Predicate<IPHtmlNode>, elems: IPHtmlNode[]): IPHtmlNode | null {
-    let elem = null as IPHtmlNode | null;
+  findOne(test: Predicate<IPHtmlElement>, elems: IPHtmlNode[]): IPHtmlElement | null {
+    let elem = null;
 
     for (let i = 0, l = elems?.length; i < l && !elem; i++) {
       const el = elems[i];
-      if (test(el)) {
+      if (el instanceof PHtmlElement && test(el)) {
         elem = el;
       } else {
         const childs = this.getChildren(el);
@@ -109,6 +114,4 @@ export class PHtmlCssSelectAdaptor implements Adapter<IPHtmlNode, IPHtmlNode> {
     return a === b;
   }
 }
-
-export const adaptor = new PHtmlCssSelectAdaptor();
 

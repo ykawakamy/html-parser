@@ -4,7 +4,7 @@ import {
   IPHtmlNodeList,
   IPHtmlRange
 } from "../interface";
-import { pHtmlParser } from "../pHtmlParser";
+import { PHtmlParser } from "../pHtmlParser";
 // XXX avoid runtime error. "Class extends value undefined is not a constructor or null". maybe circular reference.
 // import { PHtmlElement } from "./PHtmlElement";
 
@@ -14,7 +14,7 @@ export class PHtmlNode implements IPHtmlNode {
   constructor(
     private _rawText: string | undefined,
     protected _parent: IPHtmlNode | undefined | null,
-    protected _parser: pHtmlParser,
+    protected _parser: PHtmlParser,
     public range: IPHtmlRange = undefined,
     public _type: string = "node",
   ) { }

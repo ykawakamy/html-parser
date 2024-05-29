@@ -6,11 +6,11 @@ import {
 } from "../interface";
 import { PHtmlNode } from "./PHtmlNode";
 import { PHtmlElement } from "./PHtmlElement";
-import { pHtmlParser } from "../pHtmlParser";
+import { PHtmlParser } from "../pHtmlParser";
 import * as he from 'he';
 
 export class PHtmlDocument extends PHtmlElement implements IPHtmlDocument {
-  constructor(_parser: pHtmlParser, _range: IPHtmlRange) {
+  constructor(_parser: PHtmlParser, _range: IPHtmlRange) {
     super("", undefined, undefined, false, "", _parser, _range);
   }
   createElement(tagName: string, option?: object): IPHtmlElement {

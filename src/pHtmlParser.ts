@@ -1,18 +1,36 @@
 // import { PHtml, PHtmlAttributes, PHtmlElement, PHtmlNode } from "./model";
+import { Options } from "css-select";
+import * as _ from "lodash";
+import { PHtmlCssSelectAdaptor } from "./PHtmlCssSelectAdaptor";
+import { pHtmlPseudos } from "./PHtmlCssSelectPseudos";
+import { kAttributePattern, kInlineCodeTagPattern, kMarkupPattern } from "./constants";
+import { IPHtmlDocument, IPHtmlElement, IPHtmlNode, IPHtmlRange } from "./interface";
+import { PHtmlRawAttributes } from "./model/PHtmlAttributes";
 import { PHtmlDocument } from "./model/PHtmlDocument";
-import { PHtmlAttributes } from "./model/PHtmlAttributes";
 import { PHtmlElement } from "./model/PHtmlElement";
 import { PHtmlNode } from "./model/PHtmlNode";
-import { kMarkupPattern, kAttributePattern, kInlineCodeTagPattern } from "./constants";
-import { IPHtmlDocument, IPHtmlElement, IPHtmlRange } from "./interface";
-import * as _ from "lodash";
 
-export class pHtmlParser {
+export class PHtmlOptions{
   skipComment: boolean = false;
+  caseSensitive: boolean = false;
   inlineCodeTags: string[] = ['script', 'style'];
 
-  constructor(option: { skipComment: boolean} = { skipComment: false}){
-    this.skipComment = !!option.skipComment;
+}
+export class PHtmlParser{
+  option: PHtmlOptions = new PHtmlOptions();
+  readonly cssSelectOption: Options<IPHtmlNode, IPHtmlElement>;
+
+  constructor(option?: Partial<PHtmlOptions>){
+    this.option = {
+      ...this.option,
+      ...option
+    }
+
+    this.cssSelectOption = {
+      xmlMode: option?.caseSensitive,
+      adapter: new PHtmlCssSelectAdaptor(this),
+      pseudos: pHtmlPseudos(this)
+    } as const;
   }
   parse(data: string): IPHtmlDocument {
     let root = new PHtmlDocument(this, this.createRange(0, data.length));
@@ -24,7 +42,7 @@ export class pHtmlParser {
     let stack: PHtmlElement[] = [root];
     let match;
     let lastTextPos = 0;
-    const { skipComment: skipComment } = this;
+    const { skipComment, inlineCodeTags } = this.option;
     const matcher = new RegExp(kMarkupPattern);
     while ((match = matcher.exec(data))) {
       let {
@@ -52,7 +70,7 @@ export class pHtmlParser {
       }
 
       if (!leadingSlash) {
-        const attrs = new PHtmlAttributes();
+        const attrs = new PHtmlRawAttributes(this);
         const attrMatcher = new RegExp(kAttributePattern);
         for (let attMatch; (attMatch = attrMatcher.exec(attributes));) {
           const { 0: raw, 1: key, 2: val, 3: withTrail } = attMatch;
@@ -64,7 +82,7 @@ export class pHtmlParser {
         const child = new PHtmlElement(tagName, parent, attrs, !!selfClosing, trailSpace, this, this.createElementRange(tagStartPos, tagEndPos));
         parent.appendChild(child);
 
-        if( this.inlineCodeTags.includes(tagName.toLowerCase())){
+        if( inlineCodeTags.includes(tagName.toLowerCase())){
           const inline = kInlineCodeTagPattern(tagName);
           inline.lastIndex = lastTextPos;
           const inlineMatch = inline.exec(data);
@@ -86,7 +104,7 @@ export class pHtmlParser {
         }
       }
       if (leadingSlash) {
-        const s = _.findLastIndex(stack, (v) => v.tagName.toLowerCase() == tagName.toLowerCase());
+        const s = _.findLastIndex(stack, (v) => this.caseNormalize(v.tagName) === this.caseNormalize(tagName));
         if (s != -1) {
           // closeless tag 
           for( let i=stack.length-1 ; s<i; i-- ){
@@ -143,5 +161,9 @@ export class pHtmlParser {
     }
   }
 
+  caseNormalize(a: string){
+    return this.option.caseSensitive ? a : _.toLower(a);
+  }
 }
 
+export const pHtmlParserDefault = new PHtmlParser();

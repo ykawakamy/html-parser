@@ -1,6 +1,6 @@
 export type IPHtmlDomString = string;
 
-export type IPHtmlAttributes = {
+export interface IPHtmlRawAttributes {
   get length(): number;
   add(key: string, attr: string, rawWithKey: string): void;
   remove(key: string, index?: number): void;
@@ -208,7 +208,7 @@ export interface IPHtmlNode extends IPHtmlNodeExtends {
 
 
 export interface IPHtmlElementExtends extends IPHtmlNode{
-  get rawAttributes(): IPHtmlAttributes | undefined;
+  get rawAttributes(): IPHtmlRawAttributes | undefined;
   _rawCloseTag: string | undefined
 }
 /**

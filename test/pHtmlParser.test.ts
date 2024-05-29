@@ -1,4 +1,4 @@
-import { pHtmlParser } from "../src/pHtmlParser";
+import { PHtmlParser } from "../src/pHtmlParser";
 
 function toObject(obj: any): any {
   if (obj instanceof Array) {
@@ -19,62 +19,62 @@ function toObject(obj: any): any {
 describe("pHtmlParser", () => {
   test("parse", () => {
     const html = `<a><b></b><c/></a><d><e/><f/></d>`;
-    const node = new pHtmlParser().parse(html);
+    const node = new PHtmlParser().parse(html);
     // console.log(JSON.stringify(node, null, 2));
     expect(node.outerHTML).toBe(html);
   });
 
   test("inner text", () => {
     const html = `<a><b>x</b><c/></a>`;
-    const node = new pHtmlParser().parse(html);
+    const node = new PHtmlParser().parse(html);
     // console.log(JSON.stringify(node, null, 2));
     expect(node.outerHTML).toBe(html);
   });
 
   test("preserve tag's trail space ", () => {
     const html = `<a><b ></b ><c  /></a>`;
-    const node = new pHtmlParser().parse(html);
+    const node = new PHtmlParser().parse(html);
     // console.log(JSON.stringify(node, null, 2));
     expect(node.outerHTML).toBe(html);
   });
 
   test("parse trail string", () => {
     const html = `<a><b ></b ><c  /></a>text`;
-    const node = new pHtmlParser().parse(html);
+    const node = new PHtmlParser().parse(html);
     // console.log(JSON.stringify(node, null, 2));
     expect(node.outerHTML).toBe(html);
   });
   
   test("simple attribute", () => {
     const html = `<a><b x="a"></b><c/></a>`;
-    const node = new pHtmlParser().parse(html);
+    const node = new PHtmlParser().parse(html);
     // console.log(JSON.stringify(node, null, 2));
     expect(node.outerHTML).toBe(html);
   });
   test("preserve head space", () => {
     const html = `<a  x="a"/>`;
-    const node = new pHtmlParser().parse(html);
+    const node = new PHtmlParser().parse(html);
     // console.log(JSON.stringify(node, null, 2));
     expect(node.outerHTML).toBe(html);
   });
 
   test("preserve head space", () => {
     const html = `<a  x="a"  y="b"/>`;
-    const node = new pHtmlParser().parse(html);
+    const node = new PHtmlParser().parse(html);
     // console.log(JSON.stringify(node, null, 2));
     expect(node.outerHTML).toBe(html);
   });
   
   test("preserve quoteless attribute", () => {
     const html = `<a x=a y=b/>`;
-    const node = new pHtmlParser().parse(html);
+    const node = new PHtmlParser().parse(html);
     // console.log(JSON.stringify(node, null, 2));
     expect(node.outerHTML).toBe(html);
   });
 
   test("preserve self closing tag", () => {
     const html = `<a/><b/>`;
-    const node = new pHtmlParser().parse(html);
+    const node = new PHtmlParser().parse(html);
     node.querySelector("a")!.innerHTML = "inner";
     const tmpChild = node.createElement("inner");
     node.querySelector("b")!.appendChild(tmpChild);
@@ -92,7 +92,7 @@ describe("pHtmlParser", () => {
     <d>
     <e/><f/>
     </d>`;
-    const node = new pHtmlParser().parse(html);
+    const node = new PHtmlParser().parse(html);
     // console.log(JSON.stringify(node, null, 2));
     expect(node.outerHTML).toBe(html);
   });
@@ -108,7 +108,7 @@ describe("pHtmlParser", () => {
     
     <c/>
     </a>`;
-    const node = new pHtmlParser({skipComment: true}).parse(html);
+    const node = new PHtmlParser({skipComment: true}).parse(html);
     // console.log(JSON.stringify(node, null, 2));
     expect(node.outerHTML).toBe(expected);
   });
@@ -119,21 +119,21 @@ describe("pHtmlParser", () => {
     <!--comment-->
     <c/>
     </a>`;
-    const node = new pHtmlParser().parse(html);
+    const node = new PHtmlParser().parse(html);
     // console.log(JSON.stringify(node, null, 2));
     expect(node.outerHTML).toBe(html);
   });
 
   test("incorrect closing - 1", () => {
     const html = `<a><b><a></d><e/><f/></d>`;
-    const node = new pHtmlParser().parse(html);
+    const node = new PHtmlParser().parse(html);
     // console.log(JSON.stringify(node, null, 2));
     expect(node.outerHTML).toBe(html);
   });
 
   test("unclosing tag - 1", () => {
     const html = `<a><input><input2></a>`;
-    const node = new pHtmlParser().parse(html);
+    const node = new PHtmlParser().parse(html);
     // console.log(JSON.stringify(node, null, 2));
     expect(node.outerHTML).toBe(`<a><input><input2></a>`);
   });
@@ -143,9 +143,9 @@ describe("pHtmlParser", () => {
     <input type="text" value="News, Quotes, Companies, Videos" class="hdrSearchInput unUsed" id="globalHeaderSearchInput" autocomplete="off" size="28">
     <button class="hdrSearchBtn" type="button">SEARCH</button>
   </form>`;
-    const node = new pHtmlParser({skipComment: false}).parse(html, );
+    const node = new PHtmlParser({skipComment: false}).parse(html, );
     // console.log(JSON.stringify(node, null, 2));
-    expect(node.toString()).toBe(html);
+    expect(node.outerHTML).toBe(html);
     expect(node.range).toStrictEqual({
       startOpenTag: 0,
       endOpenTag: 0,
@@ -169,9 +169,9 @@ describe("pHtmlParser", () => {
     </script>
     <button class="hdrSearchBtn" type="button">SEARCH</button>
   </form>`;
-    const node = new pHtmlParser({skipComment: false}).parse(html, );
+    const node = new PHtmlParser({skipComment: false}).parse(html, );
     // console.log(JSON.stringify(node, null, 2));
-    expect(node.toString()).toBe(html);
+    expect(node.outerHTML).toBe(html);
     expect(node.querySelector("iframe")).toBe(null);
   })
 
@@ -182,9 +182,9 @@ describe("pHtmlParser", () => {
     encodeURI('<iframe width="562" height="316" src="http://'+"www.pcworld.com"+'/video/iframe/26362/iframe.html" frameborder="0" allowfullscreen></iframe>')
     <button class="hdrSearchBtn" type="button">SEARCH</button>
   </form>`;
-    const node = new pHtmlParser({skipComment: false}).parse(html, );
+    const node = new PHtmlParser({skipComment: false}).parse(html, );
     // console.log(JSON.stringify(node, null, 2));
-    expect(node.toString()).toBe(html);
+    expect(node.outerHTML).toBe(html);
     expect(node.querySelector("iframe")).not.toBe(null);
     expect(node.querySelector("script")?.childNodes.length).toBe(0);
 

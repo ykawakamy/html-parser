@@ -1,19 +1,19 @@
 // import { PHtmlElement } from "model";
 // import { PHtmlNode } from "model/PHtmlNode";
-import { pHtmlParser } from "../../src/pHtmlParser";
+import { PHtmlParser } from "../../src/pHtmlParser";
 import { PHtmlElement } from "../../src/model/PHtmlElement";
 import { PHtmlNode } from "../../src/model/PHtmlNode";
 
 describe("PHtmlNode", () => {
   describe("firstChild", () => {
     test("not found", () => {
-      const node = new PHtmlNode("rawText", undefined, new pHtmlParser());
+      const node = new PHtmlNode("rawText", undefined, new PHtmlParser());
       expect(node.firstChild).toBe(null);
     });
     test("found", () => {
-      const node = new PHtmlNode("rawText", undefined, new pHtmlParser());
-      const firstNode = new PHtmlNode("firstNode", undefined, new pHtmlParser());
-      const seconrdNode = new PHtmlNode("seconrdNode", undefined, new pHtmlParser());
+      const node = new PHtmlNode("rawText", undefined, new PHtmlParser());
+      const firstNode = new PHtmlNode("firstNode", undefined, new PHtmlParser());
+      const seconrdNode = new PHtmlNode("seconrdNode", undefined, new PHtmlParser());
       node.appendChild(firstNode)
       node.appendChild(seconrdNode)
       expect(node.firstChild).toBe(firstNode);
@@ -21,13 +21,13 @@ describe("PHtmlNode", () => {
   });
   describe("lastChild", () => {
     test("not found", () => {
-      const node = new PHtmlNode("rawText", undefined, new pHtmlParser());
+      const node = new PHtmlNode("rawText", undefined, new PHtmlParser());
       expect(node.lastChild).toBe(null);
     });
     test("found", () => {
-      const node = new PHtmlNode("rawText", undefined, new pHtmlParser());
-      const firstNode = new PHtmlNode("firstNode", undefined, new pHtmlParser());
-      const seconrdNode = new PHtmlNode("seconrdNode", undefined, new pHtmlParser());
+      const node = new PHtmlNode("rawText", undefined, new PHtmlParser());
+      const firstNode = new PHtmlNode("firstNode", undefined, new PHtmlParser());
+      const seconrdNode = new PHtmlNode("seconrdNode", undefined, new PHtmlParser());
       node.appendChild(firstNode)
       node.appendChild(seconrdNode)
       expect(node.lastChild).toBe(seconrdNode);
@@ -36,23 +36,23 @@ describe("PHtmlNode", () => {
 
   describe("nextSibling/previousSibling", () => {
     test("no parent", () => {
-      const node = new PHtmlNode("rawText", undefined, new pHtmlParser());
+      const node = new PHtmlNode("rawText", undefined, new PHtmlParser());
       expect(node.previousSibling).toBe(null);
       expect(node.nextSibling).toBe(null);
     });
     test("no previousSibling", () => {
-      const node = new PHtmlNode("rawText", undefined, new pHtmlParser());
-      const firstNode = new PHtmlNode("firstNode", undefined, new pHtmlParser());
-      const seconrdNode = new PHtmlNode("seconrdNode", undefined, new pHtmlParser());
+      const node = new PHtmlNode("rawText", undefined, new PHtmlParser());
+      const firstNode = new PHtmlNode("firstNode", undefined, new PHtmlParser());
+      const seconrdNode = new PHtmlNode("seconrdNode", undefined, new PHtmlParser());
       node.appendChild(firstNode)
       node.appendChild(seconrdNode)
       expect(firstNode.nextSibling).toBe(seconrdNode);
       expect(firstNode.previousSibling).toBe(null);
     });
     test("no nextSibling", () => {
-      const node = new PHtmlNode("rawText", undefined, new pHtmlParser());
-      const firstNode = new PHtmlNode("firstNode", undefined, new pHtmlParser());
-      const seconrdNode = new PHtmlNode("seconrdNode", undefined, new pHtmlParser());
+      const node = new PHtmlNode("rawText", undefined, new PHtmlParser());
+      const firstNode = new PHtmlNode("firstNode", undefined, new PHtmlParser());
+      const seconrdNode = new PHtmlNode("seconrdNode", undefined, new PHtmlParser());
       node.appendChild(firstNode)
       node.appendChild(seconrdNode)
       expect(seconrdNode.nextSibling).toBe(null);
@@ -62,14 +62,14 @@ describe("PHtmlNode", () => {
 
   describe("parentNode/parentElement", () => {
     test("not found", () => {
-      const node = new PHtmlNode("rawText", undefined, new pHtmlParser());
+      const node = new PHtmlNode("rawText", undefined, new PHtmlParser());
       expect(node.parentNode).toBe(null);
       expect(node.parentElement).toBe(null);
     });
     test("parentNode found", () => {
-      const node = new PHtmlNode("rawText", undefined, new pHtmlParser());
-      const firstNode = new PHtmlElement("firstNode", undefined, undefined, false, "",new pHtmlParser());
-      const seconrdNode = new PHtmlNode("seconrdNode", undefined, new pHtmlParser());
+      const node = new PHtmlNode("rawText", undefined, new PHtmlParser());
+      const firstNode = new PHtmlElement("firstNode", undefined, undefined, false, "",new PHtmlParser());
+      const seconrdNode = new PHtmlNode("seconrdNode", undefined, new PHtmlParser());
       node.appendChild(firstNode)
       node.appendChild(seconrdNode)
       expect(firstNode.parentNode).toBe(node);
@@ -78,9 +78,9 @@ describe("PHtmlNode", () => {
       expect(seconrdNode.parentElement).toBe(null);
     });
     test("parentElement found", () => {
-      const node = new PHtmlElement("rawText", undefined, undefined, false, "", new pHtmlParser());
-      const firstNode = new PHtmlElement("firstNode", undefined, undefined, false, "", new pHtmlParser());
-      const seconrdNode = new PHtmlNode("seconrdNode", undefined, new pHtmlParser());
+      const node = new PHtmlElement("rawText", undefined, undefined, false, "", new PHtmlParser());
+      const firstNode = new PHtmlElement("firstNode", undefined, undefined, false, "", new PHtmlParser());
+      const seconrdNode = new PHtmlNode("seconrdNode", undefined, new PHtmlParser());
       node.appendChild(firstNode)
       node.appendChild(seconrdNode)
       expect(firstNode.parentNode).toBe(node);
@@ -92,21 +92,21 @@ describe("PHtmlNode", () => {
 
   describe("cloneNode", () => {
     test("PHtmlNode clone", () => {
-      const node = new PHtmlNode("rawText", undefined, new pHtmlParser());
+      const node = new PHtmlNode("rawText", undefined, new PHtmlParser());
       const clone = node.cloneNode();
       expect(clone).not.toBe(node);
       expect(clone.outerHTML).toBe(node.outerHTML);
     });
     test("PHtmlElement clone", () => {
-      const node = new PHtmlElement("rawText", undefined, undefined, false, "", new pHtmlParser());
+      const node = new PHtmlElement("rawText", undefined, undefined, false, "", new PHtmlParser());
       const clone = node.cloneNode();
       expect(clone).not.toBe(node);
       expect(clone.outerHTML).toBe(node.outerHTML);
     });
     test("nested element clone", () => {
-      const node = new PHtmlElement("rawText", undefined, undefined, false, "", new pHtmlParser());
-      const firstNode = new PHtmlElement("firstNode", undefined, undefined, false, "", new pHtmlParser());
-      const seconrdNode = new PHtmlNode("seconrdNode", undefined, new pHtmlParser());
+      const node = new PHtmlElement("rawText", undefined, undefined, false, "", new PHtmlParser());
+      const firstNode = new PHtmlElement("firstNode", undefined, undefined, false, "", new PHtmlParser());
+      const seconrdNode = new PHtmlNode("seconrdNode", undefined, new PHtmlParser());
 
       const clone = node.cloneNode();
       expect(clone).not.toBe(node);
@@ -116,16 +116,16 @@ describe("PHtmlNode", () => {
 
   describe("removeChild", () => {
     test("not child", () => {
-      const node = new PHtmlNode("rawText", undefined, new pHtmlParser());
-      const notChild = new PHtmlNode("notChild", undefined, new pHtmlParser());
+      const node = new PHtmlNode("rawText", undefined, new PHtmlParser());
+      const notChild = new PHtmlNode("notChild", undefined, new PHtmlParser());
       node.removeChild(notChild);
       expect(node.childNodes.length).toBe(0);
       expect(notChild.parentNode).toBe(null);
     });
     test("remove child", () => {
-      const node = new PHtmlNode("rawText", undefined, new pHtmlParser());
-      const firstNode = new PHtmlNode("firstNode", undefined, new pHtmlParser());
-      const seconrdNode = new PHtmlNode("seconrdNode", undefined, new pHtmlParser());
+      const node = new PHtmlNode("rawText", undefined, new PHtmlParser());
+      const firstNode = new PHtmlNode("firstNode", undefined, new PHtmlParser());
+      const seconrdNode = new PHtmlNode("seconrdNode", undefined, new PHtmlParser());
       node.appendChild(firstNode)
       node.appendChild(seconrdNode)
 
@@ -138,9 +138,9 @@ describe("PHtmlNode", () => {
   
   describe("insertBefore", () => {
     test("insert newChild before oldChild", () => {
-      const node = new PHtmlNode("rawText", undefined, new pHtmlParser());
-      const oldChild = new PHtmlNode("oldChild", undefined, new pHtmlParser());
-      const newChild = new PHtmlNode("newChild", undefined, new pHtmlParser());
+      const node = new PHtmlNode("rawText", undefined, new PHtmlParser());
+      const oldChild = new PHtmlNode("oldChild", undefined, new PHtmlParser());
+      const newChild = new PHtmlNode("newChild", undefined, new PHtmlParser());
 
       node.appendChild(oldChild);
       node.insertBefore(newChild, oldChild);
@@ -149,9 +149,9 @@ describe("PHtmlNode", () => {
       expect(newChild.parentNode).toBe(node);
     });
     test("when refNode is null, append last", () => {
-      const node = new PHtmlNode("rawText", undefined, new pHtmlParser());
-      const oldChild = new PHtmlNode("oldChild", undefined, new pHtmlParser());
-      const newChild = new PHtmlNode("newChild", undefined, new pHtmlParser());
+      const node = new PHtmlNode("rawText", undefined, new PHtmlParser());
+      const oldChild = new PHtmlNode("oldChild", undefined, new PHtmlParser());
+      const newChild = new PHtmlNode("newChild", undefined, new PHtmlParser());
 
       node.appendChild(oldChild);
       node.insertBefore(newChild, null);
@@ -163,9 +163,9 @@ describe("PHtmlNode", () => {
 
   describe("replaceChild", () => {
     test("replace unreach node", () => {
-      const node = new PHtmlNode("rawText", undefined, new pHtmlParser());
-      const oldChild = new PHtmlNode("oldChild", undefined, new pHtmlParser());
-      const newChild = new PHtmlNode("newChild", undefined, new pHtmlParser());
+      const node = new PHtmlNode("rawText", undefined, new PHtmlParser());
+      const oldChild = new PHtmlNode("oldChild", undefined, new PHtmlParser());
+      const newChild = new PHtmlNode("newChild", undefined, new PHtmlParser());
 
       node.appendChild(oldChild);
       node.replaceChild(newChild, oldChild);
@@ -174,9 +174,9 @@ describe("PHtmlNode", () => {
       expect(newChild.parentNode).toBe(node);
     });
     test("same parent", () => {
-      const node = new PHtmlNode("rawText", undefined, new pHtmlParser());
-      const oldChild = new PHtmlNode("oldChild", undefined, new pHtmlParser());
-      const newChild = new PHtmlNode("newChild", undefined, new pHtmlParser());
+      const node = new PHtmlNode("rawText", undefined, new PHtmlParser());
+      const oldChild = new PHtmlNode("oldChild", undefined, new PHtmlParser());
+      const newChild = new PHtmlNode("newChild", undefined, new PHtmlParser());
 
       node.appendChild(oldChild);
       node.appendChild(newChild);
@@ -220,7 +220,7 @@ describe("PHtmlNode", () => {
 		<li>file5</li>
 		</ul><li>file4</li>
 		`;
-    const root = new pHtmlParser().parse(html);
+    const root = new PHtmlParser().parse(html);
     const uls = root.querySelectorAll(queryExpr);
     for( const $ of uls){
       var s = $.querySelector("li")!;
